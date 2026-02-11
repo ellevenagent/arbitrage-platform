@@ -34,7 +34,8 @@ export class BybitWebSocket {
   connect(): void {
     const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 'DOTUSDT', 'LINKUSDT', 'MATICUSDT'];
     
-    const url = 'wss://stream.bybit.com/v5/ws';
+    // Bybit v5 public ticker - direct connection
+    const url = 'wss://stream.bybit.com/v5/public/spot';
     
     console.log(`🔌 Connecting to Bybit WebSocket...`);
 
@@ -45,10 +46,10 @@ export class BybitWebSocket {
         console.log('✅ Bybit WebSocket connected');
         this.reconnectAttempts = 0;
         
-        // Subscribe to tickers
+        // Subscribe to tickers on public spot channel
         const subscribeMsg = {
           op: 'subscribe',
-          args: symbols.map(s => `tickers.${s}`)
+          args: symbols.map(s => `ticker.${s}`)
         };
         this.ws!.send(JSON.stringify(subscribeMsg));
         

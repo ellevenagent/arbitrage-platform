@@ -4,6 +4,11 @@
  */
 
 import 'dotenv/config';
+
+// WebSocket polyfill for Node.js
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = (await import('ws')).WebSocket;
+}
 import { Server } from 'socket.io';
 import express from 'express';
 import cors from 'cors';

@@ -33,8 +33,8 @@ export class RedisPublisher {
       });
 
       this.subscriber.on('error', (err) => {
-        console.warn(' error:', err.message);
-     ⚠️ Redis subscriber });
+        console.warn('Redis subscriber error:', err.message);
+     });
 
       // Don't connect if Redis is not available
       console.log('📦 Redis configured (connection on first use)');
