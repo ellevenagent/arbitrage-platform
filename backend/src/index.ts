@@ -78,6 +78,10 @@ const io = new Server(server, {
 const arbitrageDetector = new ArbitrageDetector(io);
 const triangularService = new TriangularArbitrageService(io);
 
+// Connect triangular service to detector for price forwarding
+import { setTriangularService } from './services/arbitrage/detector.js';
+setTriangularService(triangularService);
+
 // WebSocket Connections
 const wsConnections = {
   binance: new BinanceWebSocket(arbitrageDetector),

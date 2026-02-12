@@ -87,18 +87,36 @@ export class BinanceWebSocket {
   private processTicker(data: BinanceTicker): void {
     if (!data.s || !data.c) return;
 
-    const symbol = data.s.replace('USDT', '').replace('BTC', '').toUpperCase();
+    // Parse symbol properly: BTCUSDT -> BTC/USDT
+    const symbol = data.s.toUpperCase();
     const price = parseFloat(data.c);
     const change24h = parseFloat(data.p);
     const volume = parseFloat(data.q);
 
+    // Format symbol correctly (e.g., BTCUSDT -> BTC/USDT)
+    let baseSymbol = symbol;
+    let quoteSymbol = 'USDT';
+    
+    if (symbol.endsWith('USDT')) {
+      baseSymbol = symbol.replace('USDT', '');
+      quoteSymbol = 'USDT';
+    } else if (symbol.endsWith('BTC')) {
+      baseSymbol = symbol.replace('BTC', '');
+      quoteSymbol = 'BTC';
+    } else if (symbol.endsWith('ETH')) {
+      baseSymbol = symbol.replace('ETH', '');
+      quoteSymbol = 'ETH';
+    }
+    
+    const formattedSymbol = `${baseSymbol}/${quoteSymbol}`;
+
     // Only emit for main trading pairs
     const mainPairs = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'DOT', 'LINK', 'MATIC'];
     
-    if (mainPairs.includes(symbol)) {
+    if (mainPairs.includes(baseSymbol)) {
       this.detector.onPriceUpdate({
         exchange: 'binance',
-        symbol: symbol + '/USDT',
+        symbol: formattedSymbol,
         price: price,
         change24h: change24h,
         volume: volume,

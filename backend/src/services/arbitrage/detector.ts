@@ -37,6 +37,13 @@ interface ExchangeStats {
   lastUpdate: number | null;
 }
 
+// Forward declaration for triangular service
+let triangularService: any = null;
+
+export function setTriangularService(service: any) {
+  triangularService = service;
+}
+
 export class ArbitrageDetector {
   private io: SocketIOServer;
   
@@ -71,6 +78,11 @@ export class ArbitrageDetector {
     
     // Emit real-time price update
     this.io.emit('price:update', data);
+    
+    // Forward to triangular service
+    if (triangularService) {
+      triangularService.onPriceUpdate(data.exchange, data.symbol, data.price);
+    }
     
     // Check for arbitrage
     this.checkArbitrage(data.symbol);

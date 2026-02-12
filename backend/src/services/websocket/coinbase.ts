@@ -111,11 +111,7 @@ export class CoinbaseWebSocket {
     
     // Convert XXX-USD to XXX/USDT for consistency
     let symbol = productId.replace('-USD', '').toUpperCase();
-    if (symbol === 'BTC' || symbol === 'ETH') {
-      symbol = symbol + '/USDT';
-    } else {
-      symbol = symbol + '/USD'; // Coinbase uses USD, not USDT
-    }
+    symbol = symbol + '/USDT'; // Use USDT format for consistency
 
     // Calculate 24h change from bid/ask if not provided
     let change24h = 0;

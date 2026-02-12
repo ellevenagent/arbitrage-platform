@@ -88,14 +88,27 @@ export class BybitWebSocket {
   private processTicker(data: BybitTicker): void {
     if (!data.s || !data.c) return;
 
-    const symbol = data.s.replace('USDT', '').toUpperCase();
+    // Parse symbol properly: BTCUSDT -> BTC/USDT
+    const symbol = data.s.toUpperCase();
     const price = parseFloat(data.c);
     const change24h = parseFloat(data.p);
     const volume = parseFloat(data.v);
 
+    // Format symbol correctly
+    let baseSymbol = symbol;
+    let quoteSymbol = 'USDT';
+    
+    if (symbol.endsWith('USDT')) {
+      baseSymbol = symbol.replace('USDT', '');
+      quoteSymbol = 'USDT';
+    } else if (symbol.endsWith('BTC')) {
+      baseSymbol = symbol.replace('BTC', '');
+      quoteSymbol = 'BTC';
+    }
+
     this.detector.onPriceUpdate({
       exchange: 'bybit',
-      symbol: symbol + '/USDT',
+      symbol: `${baseSymbol}/${quoteSymbol}`,
       price: price,
       change24h: change24h,
       volume: volume,
