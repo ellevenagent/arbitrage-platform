@@ -1,14 +1,15 @@
-import { LayoutDashboard, DollarSign, TrendingUp, Settings } from 'lucide-react';
+import { LayoutDashboard, DollarSign, TrendingUp, Triangle, Activity } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'prices' | 'arbitrage';
-  onTabChange: (tab: 'dashboard' | 'prices' | 'arbitrage') => void;
+  activeTab: 'dashboard' | 'prices' | 'arbitrage' | 'triangular';
+  onTabChange: (tab: 'dashboard' | 'prices' | 'arbitrage' | 'triangular') => void;
 }
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'prices', label: 'Preços', icon: DollarSign },
-  { id: 'arbitrage', label: 'Oportunidades', icon: TrendingUp },
+  { id: 'arbitrage', label: 'Cross-Exchange', icon: TrendingUp },
+  { id: 'triangular', label: 'Triangular', icon: Triangle },
 ] as const;
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -42,7 +43,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
       <div className="absolute bottom-4 left-4 right-4">
         <div className="p-4 bg-gray-800/50 rounded-lg">
-          <p className="text-xs text-gray-400 mb-2">Status das Exchanges</p>
+          <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+            <Activity size={12} />
+            Exchanges Ativas
+          </p>
           <div className="flex gap-2">
             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
             <span className="text-xs text-green-400">Binance</span>

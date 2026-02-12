@@ -7,13 +7,16 @@ import { StatsCards } from './components/Dashboard/StatsCards';
 import { PriceTicker } from './components/Prices/PriceTicker';
 import { PriceTable } from './components/Prices/PriceTable';
 import { OpportunityList } from './components/Arbitrage/OpportunityList';
+import { TriangularArbitrage } from './components/Arbitrage/TriangularArbitrage';
 import { LoadingSpinner } from './components/Shared/LoadingSpinner';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080';
 
+type Tab = 'dashboard' | 'prices' | 'arbitrage' | 'triangular';
+
 function App() {
   const [isConnected, setIsConnected] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'prices' | 'arbitrage'>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const { setPrices, setOpportunities, setConnectionStatus } = useStore();
 
   useEffect(() => {
@@ -46,6 +49,11 @@ function App() {
       console.log(`Exchange status: ${data.exchange} - ${data.connected}`);
     });
 
+    // Triangle opportunities
+    socket.on('triangle:opportunity', (data) => {
+      console.log('🔺 Triangle opportunity:', data);
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -57,7 +65,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab as any} />
       
       <div className="flex-1 ml-64 p-6">
         <Header />
@@ -77,6 +85,10 @@ function App() {
         
         {activeTab === 'arbitrage' && (
           <OpportunityList />
+        )}
+
+        {activeTab === 'triangular' && (
+          <TriangularArbitrage />
         )}
       </div>
     </div>
