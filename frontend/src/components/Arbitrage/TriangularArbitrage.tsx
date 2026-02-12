@@ -145,27 +145,41 @@ export function TriangularArbitrage() {
   const updateTrianglePrices = (data: PriceUpdate) => {
     const { exchange, symbol, price } = data;
     
+    // Create a map to track which triangles need updating
+    const trianglesToUpdate: string[] = [];
+    
+    triangles.forEach(tri => {
+      const pairAC = `${tri.symbolA}/${tri.symbolC}`;
+      const pairBA = `${tri.symbolB}/${tri.symbolA}`;
+      const pairBC = `${tri.symbolB}/${tri.symbolC}`;
+      
+      if (symbol === pairAC || symbol === pairBA || symbol === pairBC) {
+        trianglesToUpdate.push(tri.id);
+      }
+    });
+    
+    // Only update state if there are triangles that need this price
+    if (trianglesToUpdate.length === 0) return;
+    
     setTrianglePrices(prev => {
-      const key = `${exchange}:${symbol}`;
       const updated = new Map(prev);
       
-      // Update relevant pairs for triangles
-      triangles.forEach(tri => {
+      trianglesToUpdate.forEach(triId => {
+        const tri = triangles.find(t => t.id === triId);
+        if (!tri) return;
+        
         const pairAC = `${tri.symbolA}/${tri.symbolC}`;
         const pairBA = `${tri.symbolB}/${tri.symbolA}`;
         const pairBC = `${tri.symbolB}/${tri.symbolC}`;
         
-        if (symbol === pairAC || symbol === pairBA || symbol === pairBC) {
-          const triKey = `${tri.exchange}:${tri.id}`;
-          const current = updated.get(triKey) || { priceAC: 0, priceBA: 0, priceBC: 0, lastUpdate: Date.now() };
-          
-          if (symbol === pairAC) current.priceAC = price;
-          if (symbol === pairBA) current.priceBA = price;
-          if (symbol === pairBC) current.priceBC = price;
-          current.lastUpdate = Date.now();
-          
-          updated.set(triKey, current);
-        }
+        const current = updated.get(triId) || { priceAC: 0, priceBA: 0, priceBC: 0, lastUpdate: Date.now() };
+        
+        if (symbol === pairAC) current.priceAC = price;
+        if (symbol === pairBA) current.priceBA = price;
+        if (symbol === pairBC) current.priceBC = price;
+        current.lastUpdate = Date.now();
+        
+        updated.set(triId, current);
       });
       
       return updated;
