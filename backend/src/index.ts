@@ -21,6 +21,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
+import { z } from 'zod';
 
 import { BinanceWebSocket } from './services/websocket/binance.js';
 import { BybitWebSocket } from './services/websocket/bybit.js';
@@ -38,11 +39,23 @@ const allowedOrigins = [
   'http://localhost:5173',  // Vite dev server
   'http://localhost:3000',  // React dev server
   'http://localhost:8080',  // Backend direct
-  // Adicionar domínios de produção aqui quando fizer deploy
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [])
 ];
+
+// Validation Schemas
+const triangleSchema = z.object({
+  symbol: z.string(),
+  exchanges: z.array(z.string()).min(2),
+  minProfit: z.number().optional(),
+  maxVolume: z.number().optional(),
+  active: z.boolean().optional()
+});
+
+const updateTriangleSchema = triangleSchema.partial();
 
 // Security: Helmet headers
 app.use(helmet());
+app.use(express.json()); // Parse JSON bodies
 
 // Security: Rate limiting
 const limiter = rateLimit({
@@ -146,22 +159,34 @@ app.get('/api/triangles/opportunities', (req, res) => {
 });
 
 // Add new triangle
-app.post('/api/triangles', (req, res) => {
+app.post('/api/triangles', async (req, res) => {
   try {
-    const triangle = triangularService.addTriangle(req.body);
+    const validatedData = triangleSchema.parse(req.body);
+    const triangle = triangularService.addTriangle(validatedData);
     res.json(triangle);
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
     res.status(400).json({ error: error.message });
   }
 });
 
 // Update triangle
-app.put('/api/triangles/:id', (req, res) => {
-  const triangle = triangularService.updateTriangle(req.params.id, req.body);
-  if (!triangle) {
-    return res.status(404).json({ error: 'Triangle not found' });
+app.put('/api/triangles/:id', async (req, res) => {
+  try {
+    const validatedData = updateTriangleSchema.parse(req.body);
+    const triangle = triangularService.updateTriangle(req.params.id, validatedData);
+    if (!triangle) {
+      return res.status(404).json({ error: 'Triangle not found' });
+    }
+    res.json(triangle);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    res.status(400).json({ error: error.message });
   }
-  res.json(triangle);
 });
 
 // Delete triangle

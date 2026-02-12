@@ -1,0 +1,15 @@
+{
+  "name": "arbitrage-platform",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm install && cd backend && pnpm install && cd ../frontend && pnpm install",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "dev:backend": "cd backend && pnpm dev",
+    "dev:frontend": "cd frontend && pnpm dev",
+    "build": "cd backend && pnpm build && cd ../frontend && pnpm build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

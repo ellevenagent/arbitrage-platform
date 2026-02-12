@@ -6,10 +6,11 @@ Real-time crypto arbitrage detection platform with WebSocket streaming from mult
 
 - **Real-time Price Streaming** via WebSocket
 - **Cross-Exchange Arbitrage Detection** (gaps > 0.5%)
-- **Triangular Arbitrage** (coming soon)
+- **Triangular Arbitrage** (NEW!)
 - **Redis Pub/Sub** for scalability
 - **PostgreSQL** for historical data
 - **React Dashboard** with live charts
+- **Security Hardened** (Helmet, Rate Limiting, Input Validation)
 
 ## 🏗️ Architecture
 
@@ -40,30 +41,59 @@ Real-time crypto arbitrage detection platform with WebSocket streaming from mult
 └─────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## 🚀 Quick Start (All-in-One)
 
-### Prerequisites
+We recommend using `pnpm` for faster installation.
 
-- Node.js 18+
-- Redis (optional, for Pub/Sub)
-- PostgreSQL (optional, for history)
+1. **Install Dependencies:**
+   ```bash
+   pnpm install
+   pnpm run install:all
+   ```
 
-### Backend Setup
+2. **Configure Environment:**
+   
+   **Backend:**
+   ```bash
+   cd backend
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+   
+   **Frontend:**
+   ```bash
+   cd frontend
+   # Create .env with:
+   # VITE_WS_URL=http://localhost:8080
+   ```
 
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your configuration
-npm run dev
+3. **Start Development Server:**
+   ```bash
+   # From root directory
+   pnpm run dev
+   ```
+   This will start both Backend (port 8080) and Frontend (port 5173) concurrently.
+
+## 🔧 Environment Variables
+
+### Backend (.env)
+
+```env
+PORT=8080
+NODE_ENV=development
+
+# Security
+CORS_ORIGINS=http://localhost:5173,https://your-production-domain.com
+
+# Arbitrage Settings
+MIN_ARBITRAGE_PERCENT=0.5
+MIN_VOLUME_USD=1000
 ```
 
-### Frontend Setup
+### Frontend (.env)
 
-```bash
-cd frontend
-npm install
-npm run dev
+```env
+VITE_WS_URL=http://localhost:8080
 ```
 
 ## 📡 WebSocket Endpoints
@@ -75,22 +105,6 @@ npm run dev
 | Coinbase | `wss://ws-feed.exchange.coinbase.com` | ❌ No |
 | Kraken | `wss://ws.kraken.com` | ❌ No |
 
-## 🔧 Environment Variables
-
-```env
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# Server
-PORT=8080
-NODE_ENV=development
-
-# Arbitrage Settings
-MIN_ARBITRAGE_PERCENT=0.5
-MIN_VOLUME_USD=1000
-```
-
 ## 📁 Project Structure
 
 ```
@@ -99,52 +113,19 @@ arbitrage-platform/
 │   ├── src/
 │   │   ├── index.ts              # Entry point
 │   │   ├── services/
-│   │   │   ├── websocket/
-│   │   │   │   ├── binance.ts    # Binance WS
-│   │   │   │   ├── bybit.ts      # Bybit WS
-│   │   │   │   ├── coinbase.ts   # Coinbase WS
-│   │   │   │   └── kraken.ts     # Kraken WS
-│   │   │   ├── redis/
-│   │   │   │   └── publisher.ts  # Redis Pub/Sub
-│   │   │   └── arbitrage/
-│   │   │       └── detector.ts   # Arbitrage engine
-│   │   └── types/
-│   │       └── index.ts           # TypeScript types
+│   │   │   ├── arbitrage/        # Detection logic
+│   │   │   │   ├── detector.ts   # Cross-exchange engine
+│   │   │   │   └── triangular.ts # Triangular engine
 │   ├── package.json
 │   └── tsconfig.json
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── PriceTicker.tsx
-│   │   │   └── ArbitrageAlert.tsx
-│   │   ├── hooks/
-│   │   │   └── useWebSocket.ts
-│   │   └── store/
-│   │       └── useStore.ts
+│   │   ├── components/           # React components
+│   │   ├── hooks/                # Custom hooks (useWebSocket)
+│   │   └── store/                # Zustand store
 │   └── package.json
 └── README.md
 ```
-
-## 🎯 Supported Exchanges
-
-1. **Binance** - Highest liquidity
-2. **Bybit** - Low latency, good for perpetuals
-3. **Coinbase** - Regulated, US/EU markets
-4. **Kraken** - Reliable, good altcoin selection
-
-## 📈 Arbitrage Detection
-
-### Cross-Exchange
-```
-Buy BTC on Exchange A at $67,000
-Sell BTC on Exchange B at $67,500
-Profit: $500 (0.75%)
-```
-
-### Detection Threshold
-- Minimum arbitrage: 0.5%
-- Minimum volume: $1,000 USD
 
 ## 🔒 Safety Rules
 
