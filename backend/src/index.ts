@@ -12,6 +12,8 @@ if (typeof globalThis.WebSocket === 'undefined') {
 import { Server } from 'socket.io';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 
 import { BinanceWebSocket } from './services/websocket/binance.js';
@@ -25,18 +27,47 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 const server = createServer(app);
 
-// CORS
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST']
-}));
+// Allowed origins for CORS
+const allowedOrigins = [
+  'http://localhost:5173',  // Vite dev server
+  'http://localhost:3000',    // React dev server
+  'http://localhost:8080',     // Backend direct
+  // Adicionar domínios de produção aqui quando fizer deploy
+];
 
-// Socket.IO
+// Security: Helmet headers
+app.use(helmet());
+
+// Security: Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// CORS - restricted to allowed origins
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST'],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
+// Socket.IO with CORS
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+  cors: corsOptions
 });
 
 // Services

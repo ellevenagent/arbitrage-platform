@@ -1,0 +1,51 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+  RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build backend
+        run: |
+          cd backend
+          pnpm run build
+        
+      - name: Build frontend
+        run: |
+          cd frontend
+          pnpm run build
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: amondnet/railway-deployment@v2
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: ${{ secrets.RAILWAY_SERVICE }}
+          environment: ${{ secrets.RAILWAY_ENVIRONMENT }}
+          args: up -d
+        env:
+          RAILWAY_ENVIRONMENT_NAME: production

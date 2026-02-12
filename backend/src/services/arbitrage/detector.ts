@@ -3,6 +3,7 @@
  * Detects cross-exchange and triangular arbitrage opportunities
  */
 
+import { randomUUID } from 'crypto';
 import { Server as SocketIOServer } from 'socket.io';
 import { RedisPublisher } from '../redis/publisher.js';
 
@@ -125,7 +126,7 @@ export class ArbitrageDetector {
     profitPercent: number
   ): void {
     const opportunity: ArbitrageOpportunity = {
-      id: `arb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `arb_${Date.now()}_${randomUUID()}`,
       type: 'cross-exchange',
       symbol: buy.symbol,
       buyExchange: buy.exchange,

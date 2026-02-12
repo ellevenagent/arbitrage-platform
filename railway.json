@@ -1,0 +1,19 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "name": "arbitrage-platform",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/health",
+    "restartPolicy": "ON_FAILURE",
+    "timeoutSeconds": 60
+  },
+  "environments": [
+    {
+      "name": "production",
+      "variable": ["NODE_ENV=production", "PORT=8080"]
+    }
+  ]
+}
