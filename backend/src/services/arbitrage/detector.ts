@@ -1,11 +1,13 @@
 /**
  * Arbitrage Detection Engine
  * Detects cross-exchange and triangular arbitrage opportunities
+ * 
+ * Redis: Not used - Socket.IO handles all real-time communication
+ * For Redis persistence, add @upstash/redis later
  */
 
 import { randomUUID } from 'crypto';
 import { Server as SocketIOServer } from 'socket.io';
-import { RedisPublisher } from '../redis/publisher.js';
 
 interface PriceData {
   exchange: string;
@@ -36,7 +38,6 @@ interface ExchangeStats {
 }
 
 export class ArbitrageDetector {
-  private redis: RedisPublisher;
   private io: SocketIOServer;
   
   // Price storage: symbol -> exchange -> price
@@ -47,8 +48,7 @@ export class ArbitrageDetector {
   private minArbitragePercent: number;
   private minVolumeUSD: number;
 
-  constructor(redis: RedisPublisher, io: SocketIOServer) {
-    this.redis = redis;
+  constructor(io: SocketIOServer) {
     this.io = io;
     this.minArbitragePercent = parseFloat(process.env.MIN_ARBITRAGE_PERCENT || '0.5');
     this.minVolumeUSD = parseFloat(process.env.MIN_VOLUME_USD || '1000');
@@ -71,9 +71,6 @@ export class ArbitrageDetector {
     
     // Emit real-time price update
     this.io.emit('price:update', data);
-    
-    // Store in Redis for persistence
-    this.redis.publishPrice(data);
     
     // Check for arbitrage
     this.checkArbitrage(data.symbol);
@@ -143,9 +140,6 @@ export class ArbitrageDetector {
     
     // Emit to frontend
     this.io.emit('arbitrage:opportunity', opportunity);
-    
-    // Store in Redis
-    this.redis.publishArbitrage(opportunity);
     
     console.log(`🚀 ARBITRAGE DETECTED:
       ${buy.symbol}: ${buy.exchange.toUpperCase()} $${buy.price} → ${sell.exchange.toUpperCase()} $${sell.price}

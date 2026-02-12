@@ -1,6 +1,9 @@
 /**
  * Arbitrage Platform - Backend Entry Point
  * Real-time crypto arbitrage detection via WebSockets
+ * 
+ * Redis: Not used - Socket.IO handles all real-time communication
+ * For Redis persistence, add @upstash/redis later
  */
 
 import 'dotenv/config';
@@ -20,7 +23,6 @@ import { BinanceWebSocket } from './services/websocket/binance.js';
 import { BybitWebSocket } from './services/websocket/bybit.js';
 import { CoinbaseWebSocket } from './services/websocket/coinbase.js';
 import { KrakenWebSocket } from './services/websocket/kraken.js';
-import { RedisPublisher } from './services/redis/publisher.js';
 import { ArbitrageDetector } from './services/arbitrage/detector.js';
 
 const PORT = process.env.PORT || 8080;
@@ -30,8 +32,8 @@ const server = createServer(app);
 // Allowed origins for CORS
 const allowedOrigins = [
   'http://localhost:5173',  // Vite dev server
-  'http://localhost:3000',    // React dev server
-  'http://localhost:8080',     // Backend direct
+  'http://localhost:3000',  // React dev server
+  'http://localhost:8080',  // Backend direct
   // Adicionar domínios de produção aqui quando fizer deploy
 ];
 
@@ -71,8 +73,7 @@ const io = new Server(server, {
 });
 
 // Services
-const redis = new RedisPublisher();
-const arbitrageDetector = new ArbitrageDetector(redis, io);
+const arbitrageDetector = new ArbitrageDetector(io);
 
 // WebSocket Connections
 const wsConnections = {
@@ -114,6 +115,7 @@ server.listen(PORT, () => {
   console.log(`🚀 Arbitrage Platform Backend running on port ${PORT}`);
   console.log(`📊 WebSocket: ws://localhost:${PORT}`);
   console.log(`🔌 REST API: http://localhost:${PORT}/health`);
+  console.log(`💾 Redis: Not used (Socket.IO for real-time only)`);
   
   // Connect WebSockets
   console.log('\n📡 Connecting to exchanges...');
@@ -127,7 +129,6 @@ server.listen(PORT, () => {
 process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down...');
   Object.values(wsConnections).forEach(ws => ws.disconnect());
-  redis.disconnect();
   server.close(() => {
     console.log('✅ Server closed');
     process.exit(0);
